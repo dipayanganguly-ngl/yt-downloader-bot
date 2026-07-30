@@ -1,4 +1,3 @@
-import os
 import telebot
 import yt_dlp
 
@@ -9,7 +8,25 @@ def extract_url(video_url, quality="best"):
     if quality == "audio": fmt = "bestaudio/best"
     elif quality != "best": fmt = f"best[height<={quality}]"
     else: fmt = "best"
-    ydl_opts = {'format': fmt, 'skip_download': True, 'quiet': True, 'extractor_args': {'youtube': {'player_client': ['default', '-android_sdkless']}}}
+    
+    ydl_opts = {
+        'format': fmt,
+        'skip_download': True,
+        'quiet': True,
+        # GEMINI BYPASS TECHNIQUES:
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['default', '-android_sdkless', 'tv', 'ios'],
+                'formats': ['missing_pot']
+            }
+        },
+        # Use OAuth2 for authentication
+        'username': 'oauth2',
+        # Use mobile client to avoid blocks
+        'headers': {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36'
+        }
+    }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
@@ -17,7 +34,7 @@ def extract_url(video_url, quality="best"):
     except: return None, None
 
 @bot.message_handler(commands=['start'])
-def start(msg): bot.reply_to(msg, "🎬 Send YouTube link\n🎵 /mp3 <link>\n🎥 /360 <link>\n🎥 /720 <link>")
+def start(msg): bot.reply_to(msg, "🎬 YouTube Downloader\n\n📹 Send link - Best Quality\n🎵 /mp3 <link> - Audio\n🎥 /360 <link> - 360p\n🎥 /720 <link> - 720p")
 
 @bot.message_handler(commands=['mp3'])
 def mp3(msg):
@@ -40,6 +57,6 @@ def quality_cmd(msg):
 def handle_link(msg):
     bot.reply_to(msg, "⏳ Extracting...")
     url, title = extract_url(msg.text, "best")
-    bot.reply_to(msg, f"🎬 {title}\n\n📥 {url}\n\n💡 /mp3 | /360 | /720" if url else "❌ Failed")
+    bot.reply_to(msg, f"🎬 {title}\n\n📥 {url}" if url else "❌ Failed")
 
 if __name__ == "__main__": bot.infinity_polling()
