@@ -1,1 +1,3 @@
-flask\nrequests
+flask
+requests
+yt-dlp
